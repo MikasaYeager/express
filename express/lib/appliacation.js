@@ -1,14 +1,17 @@
 const http = require('http')
 const url = require('url')
 const Router = require('./router')
+const methods = require('methods')
 function Application () {
   this.router = new Router()
 }
 
-Application.prototype.get = function (path, handler) {
-  // 应用层只做转发
-  this.router.get(path, handler)
-}
+methods.forEach(method=>{
+  Application.prototype[method] = function (path,...handlers) {
+    this.router[method](path,handlers)
+  }
+})
+
 
 Application.prototype.listen = function (...args) {
   const server = http.createServer((req, res) => {

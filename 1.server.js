@@ -1,16 +1,29 @@
 // 默认当前版本是4.17
-const express = require('./express') // let Koa = require(Koa)
-const port = 8080
-const app = express() // const app = new Koa()
-
+const express = require('./express')
+const app = express()
+app.get(
+  '/',
+  function (req, res, next) {
+    console.log(1)
+    next()
+  },
+  function (req, res, next) {
+    console.log(11)
+    next()
+  },
+  function (req, res, next) {
+    console.log(111)
+    next()
+  }
+)
+// 执行完以上代码之后
 app.get('/', function (req, res, next) {
-  // koa-router koa-router参考了express 自带的路由来实现的
-  res.end('home')
+  console.log(2)
+  next()
 })
-app.get('/about', function (req, res) {
-  res.end('about')
+app.get('/', function (req, res, next) {
+  res.end('hahaha')
 })
-
-app.listen(port, function () {
-  console.log(`server start localhost:${port}/`)
+app.listen(8080, function () {
+  console.log('server start at http://127.0.0.1:8080/')
 })
