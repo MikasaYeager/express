@@ -2,16 +2,26 @@ const http = require('http')
 const url = require('url')
 const Router = require('./router')
 const methods = require('methods')
-function Application () {
-  this.router = new Router()
+function Application () {}
+
+Application.prototype.lazy_router = function () {
+  if (!this.router) {
+    this.router = new Router()
+  }
 }
 
-methods.forEach(method=>{
-  Application.prototype[method] = function (path,...handlers) {
-    this.router[method](path,handlers)
+Application.prototype.use = function (path, handler) {
+  // application只负责转发,尽量不处理参数
+  this.lazy_router()
+  this.router.use(path, handler)
+}
+
+methods.forEach(method => {
+  Application.prototype[method] = function (path, ...handlers) {
+    this.lazy_router()
+    this.router[method](path, handlers)
   }
 })
-
 
 Application.prototype.listen = function (...args) {
   const server = http.createServer((req, res) => {

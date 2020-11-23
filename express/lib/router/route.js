@@ -15,8 +15,11 @@ Route.prototype.dispatch = function (req, res, out) {
       return out()
     }
     const layer = this.stack[index++]
-    if (layer.method === req.method.toLowerCase()) {
-      layer.handle(req, res, next)
+    const method = req.method.toLowerCase()
+    // 这个method的作用是app.route('/).get(fn1).post(fn2)...
+    // 不过这个功能用的很少
+    if (layer.match_method(method)) {
+      layer.handle_request(req, res, next)
     } else {
       next()
     }
@@ -24,7 +27,7 @@ Route.prototype.dispatch = function (req, res, out) {
   next()
 }
 
-Route.prototype.match = function (method) {
+Route.prototype.match_method = function (method) {
   return !!this.methods[method]
 }
 
