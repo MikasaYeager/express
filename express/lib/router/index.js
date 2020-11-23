@@ -1,3 +1,3 @@
-const Router = require('./rouwter')
+const Router = require('./router')
 
 module.exports = Router

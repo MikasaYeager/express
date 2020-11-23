@@ -1,39 +1,25 @@
 const http = require('http')
 const url = require('url')
+const Router = require('./router')
 function Application () {
-  this.routes = [
-    {
-      path: '*',
-      method: 'all',
-      handler: (req, res) => {
-        res.end(`Cannot ${req.method} ${req.url}`)
-      }
-    }
-  ]
+  this.router = new Router()
 }
 
 Application.prototype.get = function (path, handler) {
-  this.routes.push({
-    method: 'get',
-    path,
-    handler
-  })
+  // 应用层只做转发
+  this.router.get(path, handler)
 }
 
 Application.prototype.listen = function (...args) {
   const server = http.createServer((req, res) => {
-    const { pathname } = url.parse(req.url,true)
-    const requestMethod = req.method.toLowerCase()
-    for (let index = 1; index < this.routes.length; index++) {
-      const { path, method, handler } = this.routes[index]
-      if (pathname === path && method === requestMethod) {
-        return handler(req, res)
-      }
+    // 将请求交给路由去做处理,application只做请求的转发和请求不到时的逻辑
+    function done () {
+      res.end(`Cannot ${req.method} ${req.url}`)
     }
-    return this.routes[0].handler(req, res)
+    this.router.handle(req, res, done)
   })
 
-  server.listen(...args)
+  return server.listen(...args)
 }
 
 module.exports = Application
