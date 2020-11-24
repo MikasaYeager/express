@@ -60,8 +60,8 @@ Router.prototype.handle = function (req, res, out) {
       }
     } else {
       if (layer.match_path(pathname)) {
-        // 如果路径匹配
         // 如果layer有route的话那么就是路由中间件
+        req.params = layer.params
         if (layer.route) {
           if (layer.route.match_method(requestMethod)) {
             layer.handle_request(req, res, next)
@@ -70,6 +70,7 @@ Router.prototype.handle = function (req, res, out) {
           }
         } else {
           // 没有route的话那就是普通中间件,不过也需要排除错误处理中间件
+          // 普通中间件是没有动态参数的
           if (layer.handler.length !== 4) {
             layer.handle_request(req, res, next)
           } else {
