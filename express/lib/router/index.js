@@ -3,10 +3,17 @@ const methods = require('methods')
 const Route = require('./route')
 const Layer = require('./layer')
 function Router () {
-  this.stack = []
+  const router = function (req, res, next) {
+    router.handle(req, res, next)
+  }
+  router.stack = []
+  Object.setPrototypeOf(router, proto)
+  return router
 }
 
-Router.prototype.use = function (path, handler) {
+const proto = {}
+
+proto.use = function (path, handler) {
   if (!handler) {
     if (typeof path === 'function') {
       handler = path
@@ -19,7 +26,7 @@ Router.prototype.use = function (path, handler) {
   this.stack.push(layer)
 }
 
-Router.prototype.route = function (path) {
+proto.route = function (path) {
   const route = new Route()
   const layer = new Layer(path, route.dispatch.bind(route))
   // layer的handler是它身上route的dispatch
@@ -29,14 +36,15 @@ Router.prototype.route = function (path) {
 }
 
 methods.forEach(method => {
-  Router.prototype[method] = function (path, handelrs) {
+  proto[method] = function (path, handelrs) {
     const route = this.route(path)
     route[method](handelrs)
   }
 })
 
-Router.prototype.handle = function (req, res, out) {
+proto.handle = function (req, res, out) {
   const { pathname } = url.parse(req.url)
+  const originalUrl = req.url
   const requestMethod = req.method.toLowerCase()
   let idx = 0
   const next = err => {
@@ -49,6 +57,7 @@ Router.prototype.handle = function (req, res, out) {
     if (idx >= this.stack.length) {
       return out()
     }
+    req.url = originalUrl
     const layer = this.stack[idx++]
     if (err) {
       // 如果有错,那么就找错误处理中间件
@@ -70,8 +79,9 @@ Router.prototype.handle = function (req, res, out) {
           }
         } else {
           // 没有route的话那就是普通中间件,不过也需要排除错误处理中间件
-          // 普通中间件是没有动态参数的
+          // 普通中间件注册的有可能是子路由,所以需要将url截取
           if (layer.handler.length !== 4) {
+            req.url = pathname.slice(layer.path.length)
             layer.handle_request(req, res, next)
           } else {
             next()

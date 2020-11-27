@@ -33,6 +33,9 @@ Route.prototype.match_method = function (method) {
 
 methods.forEach(method => {
   Route.prototype[method] = function (handlers) {
+    // 因为还可能是多级路由,多级路由是不走application的,所以不会帮我们将handlers转化为数组
+    // 所以在这里需要自己手动转换一下
+    handlers = Array.isArray(handlers) ? handlers : [handlers]
     handlers.forEach(handler => {
       const layer = new Layer('', handler)
       layer.method = method

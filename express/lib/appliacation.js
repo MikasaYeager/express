@@ -19,6 +19,7 @@ Application.prototype.use = function (path, handler) {
 methods.forEach(method => {
   Application.prototype[method] = function (path, ...handlers) {
     this.lazy_router()
+    console.log('path: ', path)
     this.router[method](path, handlers)
   }
 })
